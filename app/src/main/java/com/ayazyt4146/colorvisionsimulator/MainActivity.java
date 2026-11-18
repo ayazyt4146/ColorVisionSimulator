@@ -12,6 +12,7 @@ import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.content.ClipData;
 import android.content.ClipboardManager;
+import android.content.Intent;
 
 public class MainActivity extends Activity {
     private final String[] modes = {
@@ -137,17 +138,32 @@ public class MainActivity extends Activity {
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
         });
 
-        LinearLayout gameCard = new LinearLayout(this);
-        gameCard.setOrientation(LinearLayout.VERTICAL);
-        gameCard.setPadding(dp(16), dp(14), dp(16), dp(14));
-        gameCard.setBackground(shape(Color.rgb(35, 48, 68), 16));
-        gameCard.addView(text(english ? "GAME MODE · MINECRAFT" : "OYUN MODU · MINECRAFT", 17, Color.rgb(116, 210, 170), true));
-        TextView gameInfo = text(english ? "Enable the filter, then open Minecraft. If Android supports the system daltonizer, the effect can remain active in-game. A floating in-game menu is not included in this build." : "Filtreyi BAŞLAT ile açtıktan sonra Minecraft'a geçebilirsin. Android cihazın sistem filtresini destekliyorsa renkler oyun içinde de değişir. Bu sürümde yüzen mod menüsü henüz yok; filtreyi buradan seçip açıp kapatabilirsin.", 14, Color.LTGRAY, false);
-        gameInfo.setPadding(0, dp(7), 0, 0);
-        gameCard.addView(gameInfo);
-        LinearLayout.LayoutParams gameParams = new LinearLayout.LayoutParams(-1, -2);
-        gameParams.setMargins(0, 0, 0, dp(12));
-        content.addView(gameCard, gameParams);
+        TextView overlayTitle = text(english ? "FLOATING MODE MENU" : "YÜZEN MOD MENÜSÜ", 17, Color.rgb(116, 210, 170), true);
+        overlayTitle.setPadding(dp(4), dp(12), 0, dp(8));
+        content.addView(overlayTitle);
+        TextView overlayInfo = text(english ? "Open a compact control panel over other apps. Choose a simulation mode and apply it without returning here." : "Diğer uygulamaların üzerinde küçük bir kontrol paneli aç. Simülasyon türünü seçip buraya dönmeden uygula.", 14, Color.LTGRAY, false);
+        overlayInfo.setPadding(dp(4), 0, dp(4), dp(12));
+        content.addView(overlayInfo);
+        Button overlayButton = button(english ? "ENABLE FLOATING MENU" : "YÜZEN MENÜYÜ ETKİNLEŞTİR", Color.rgb(74, 105, 190));
+        content.addView(overlayButton, new LinearLayout.LayoutParams(-1, dp(62)));
+        overlayButton.setOnClickListener(v -> {
+            if (!android.provider.Settings.canDrawOverlays(this)) {
+                Intent permissionIntent = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                    android.net.Uri.parse("package:" + getPackageName()));
+                startActivity(permissionIntent);
+                Toast.makeText(this, english ? "Allow display over other apps, then return and tap again." : "Diğer uygulamaların üzerinde gösterme iznini ver, geri dönüp tekrar dokun.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            startService(new Intent(this, FloatingMenuService.class));
+            Toast.makeText(this, english ? "Floating menu enabled." : "Yüzen menü etkinleştirildi.", Toast.LENGTH_SHORT).show();
+        });
+        Button stopOverlay = button(english ? "CLOSE FLOATING MENU" : "YÜZEN MENÜYÜ KAPAT", Color.rgb(92, 100, 118));
+        LinearLayout.LayoutParams stopOverlayParams = new LinearLayout.LayoutParams(-1, dp(54));
+        stopOverlayParams.setMargins(0, dp(8), 0, 0);
+        content.addView(stopOverlay, stopOverlayParams);
+        stopOverlay.setOnClickListener(v -> stopService(new Intent(this, FloatingMenuService.class)));
+
+
 
         LinearLayout sample = new LinearLayout(this);
         sample.setOrientation(LinearLayout.VERTICAL);
