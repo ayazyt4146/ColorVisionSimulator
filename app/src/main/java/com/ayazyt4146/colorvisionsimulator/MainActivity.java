@@ -8,6 +8,10 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.*;
+import android.content.SharedPreferences;
+import android.provider.Settings;
+import android.content.ClipData;
+import android.content.ClipboardManager;
 
 public class MainActivity extends Activity {
     private final String[] modes = {
@@ -135,7 +139,7 @@ public class MainActivity extends Activity {
         content.addView(start, bp);
         start.setOnClickListener(v -> {
             selected = modeSpinner.getSelectedItemPosition();
-            showSimulation();
+            startGlobalSimulation();
         });
 
         TextView limitation = text("ÖNEMLİ: Bu sürüm uygulama içi simülasyon ekranıdır. Android, normal bir uygulamanın diğer oyunların ve uygulamaların görüntüsünü doğrudan değiştirmesine izin vermez. Sistem geneli renk düzeltme cihazın kendi ayarlarıyla ayrıca yönetilir.", 12, Color.rgb(190, 199, 211), false);
@@ -145,6 +149,98 @@ public class MainActivity extends Activity {
         scroll.addView(content);
         page.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(page);
+    }
+
+    private static final String DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled";
+    private static final String DALTONIZER_MODE = "accessibility_display_daltonizer";
+    private static final String PREFS = "global_filter_backup";
+
+    private int systemModeForSelection(int selection) {
+        switch (selection) {
+            case 1: case 2: return 11; // Protan tipi
+            case 3: case 4: return 12; // Deutan tipi
+            case 5: case 6: return 13; // Tritan tipi
+            case 7: return 0;          // Gri tonlama
+            default: return -999;      // Cihazın sistem filtresinde karşılığı yok
+        }
+    }
+
+    private void startGlobalSimulation() {
+        if (selected == 0) {
+            Toast.makeText(this, "Önce bir simülasyon türü seç.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS")
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            showAdbPermissionDialog();
+            return;
+        }
+
+        int systemMode = systemModeForSelection(selected);
+        if (systemMode == -999) {
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Bu mod sistem genelinde desteklenmiyor")
+                .setMessage("Seçtiğin mod uygulama içi önizlemede çalışabilir. Android'in standart sistem filtresinde bu mod için ayrı bir seçenek bulunmuyor.")
+                .setPositiveButton("Önizlemeyi aç", (d, w) -> showSimulation())
+                .setNegativeButton("Geri", null)
+                .show();
+            return;
+        }
+
+        SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        if (!prefs.getBoolean("active", false)) {
+            int oldEnabled = Settings.Secure.getInt(getContentResolver(), DALTONIZER_ENABLED, 0);
+            int oldMode = Settings.Secure.getInt(getContentResolver(), DALTONIZER_MODE, -1);
+            prefs.edit()
+                .putInt("old_enabled", oldEnabled)
+                .putInt("old_mode", oldMode)
+                .putBoolean("active", true)
+                .apply();
+        }
+
+        boolean modeWritten = Settings.Secure.putInt(getContentResolver(), DALTONIZER_MODE, systemMode);
+        boolean enabledWritten = Settings.Secure.putInt(getContentResolver(), DALTONIZER_ENABLED, 1);
+        if (!modeWritten || !enabledWritten) {
+            restoreGlobalSettings();
+            new android.app.AlertDialog.Builder(this)
+                .setTitle("Cihaz sistem filtresini kabul etmedi")
+                .setMessage("İzin verilmiş olsa bile TECNO'nun yazılımı bu Android ayarını desteklemiyor olabilir. Şimdilik uygulama içi önizlemeyi açabilirsin.")
+                .setPositiveButton("Önizlemeyi aç", (d, w) -> showSimulation())
+                .setNegativeButton("Geri", null)
+                .show();
+            return;
+        }
+
+        Toast.makeText(this, "Sistem filtresi etkinleştirildi (cihaz desteğine bağlı).", Toast.LENGTH_LONG).show();
+        showSimulation();
+    }
+
+    private void showAdbPermissionDialog() {
+        String command = "adb shell pm grant com.ayazyt4146.colorvisionsimulator android.permission.WRITE_SECURE_SETTINGS";
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("Bir defalık sistem izni gerekiyor")
+            .setMessage("Bu izin normal bir açılır pencereden verilemiyor. Redmi Pad SE üzerinden kablosuz hata ayıklama ile şu komutu çalıştıracağız. Şimdilik hiçbir şey değişmedi.")
+            .setPositiveButton("Komutu kopyala", (d, w) -> {
+                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                clipboard.setPrimaryClip(ClipData.newPlainText("ADB komutu", command));
+                Toast.makeText(this, "Komut kopyalandı.", Toast.LENGTH_SHORT).show();
+            })
+            .setNegativeButton("Sonra", null)
+            .show();
+    }
+
+    private void restoreGlobalSettings() {
+        SharedPreferences prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
+        if (!prefs.getBoolean("active", false)) return;
+        int oldEnabled = prefs.getInt("old_enabled", 0);
+        int oldMode = prefs.getInt("old_mode", -1);
+        if (checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS")
+                == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            Settings.Secure.putInt(getContentResolver(), DALTONIZER_MODE, oldMode);
+            Settings.Secure.putInt(getContentResolver(), DALTONIZER_ENABLED, oldEnabled);
+        }
+        prefs.edit().putBoolean("active", false).apply();
     }
 
     private void showSimulation() {
@@ -166,7 +262,7 @@ public class MainActivity extends Activity {
         SimulationView simulation = new SimulationView();
         page.addView(simulation, new LinearLayout.LayoutParams(-1, 0, 1));
 
-        TextView explanation = text("Bu ekran yalnızca bu uygulamanın içeriğini simüle eder. Başka uygulamaların veya oyunların renklerini değiştirmez.", 13, Color.LTGRAY, false);
+        TextView explanation = text("Sistem filtresi destekleniyorsa diğer uygulamalara da uygulanır. Bazı modlar yalnızca bu uygulamanın önizlemesinde çalışır. İPTAL önceki sistem ayarlarını geri yükler.", 13, Color.LTGRAY, false);
         explanation.setGravity(Gravity.CENTER);
         explanation.setPadding(dp(8), dp(12), dp(8), dp(12));
         page.addView(explanation);
@@ -174,6 +270,7 @@ public class MainActivity extends Activity {
         Button cancel = button("İPTAL  ·  MENÜYE DÖN", Color.rgb(180, 65, 72));
         page.addView(cancel, new LinearLayout.LayoutParams(-1, dp(64)));
         cancel.setOnClickListener(v -> {
+            restoreGlobalSettings();
             selected = 0;
             showMenu();
         });
@@ -181,6 +278,7 @@ public class MainActivity extends Activity {
     }
 
     @Override public void onBackPressed() {
+        restoreGlobalSettings();
         showMenu();
     }
 
