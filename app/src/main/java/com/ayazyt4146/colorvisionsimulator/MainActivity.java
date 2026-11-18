@@ -76,7 +76,7 @@ public class MainActivity extends Activity {
         title.setPadding(0, dp(10), 0, dp(12));
         content.addView(title, new LinearLayout.LayoutParams(-1, -2));
 
-        TextView subtitle = text("Bir görünüm seç. BAŞLAT'a basınca simülasyon ekranı açılır.", 16, Color.LTGRAY, false);
+        TextView subtitle = text("Bir görünüm seç. BAŞLAT'a basınca sistem filtresini etkinleştirmeyi dener.", 16, Color.LTGRAY, false);
         subtitle.setGravity(Gravity.CENTER);
         subtitle.setPadding(dp(8), 0, dp(8), dp(24));
         content.addView(subtitle);
@@ -118,7 +118,7 @@ public class MainActivity extends Activity {
         sample.setBackground(shape(Color.rgb(27, 37, 54), 18));
         TextView sampleTitle = text("ÖNİZLEME ALANI", 17, Color.WHITE, true);
         sample.addView(sampleTitle);
-        TextView sampleDesc = text("Seçtiğin filtre, BAŞLAT ekranındaki renk örneklerine uygulanır.", 14, Color.LTGRAY, false);
+        TextView sampleDesc = text("Sistem filtresi desteklenirse telefonun diğer uygulamalarında da görünür.", 14, Color.LTGRAY, false);
         sampleDesc.setPadding(0, dp(6), 0, dp(12));
         sample.addView(sampleDesc);
         LinearLayout swatches = new LinearLayout(this);
@@ -153,7 +153,7 @@ public class MainActivity extends Activity {
             });
         }
 
-        TextView limitation = text("ÖNEMLİ: Bu sürüm uygulama içi simülasyon ekranıdır. Android, normal bir uygulamanın diğer oyunların ve uygulamaların görüntüsünü doğrudan değiştirmesine izin vermez. Sistem geneli renk düzeltme cihazın kendi ayarlarıyla ayrıca yönetilir.", 12, Color.rgb(190, 199, 211), false);
+        TextView limitation = text("Sistem genelinde çalışma, Android'in renk düzeltme desteğine ve bir defalık sistem iznine bağlıdır. Her cihazda destek garantisi yoktur.", 12, Color.rgb(190, 199, 211), false);
         limitation.setPadding(dp(6), dp(8), dp(6), dp(12));
         content.addView(limitation);
 
@@ -168,11 +168,11 @@ public class MainActivity extends Activity {
 
     private int systemModeForSelection(int selection) {
         switch (selection) {
-            case 1: case 2: return 11; // Protan tipi
-            case 3: case 4: return 12; // Deutan tipi
-            case 5: case 6: return 13; // Tritan tipi
-            case 7: return 0;          // Gri tonlama
-            default: return -999;      // Cihazın sistem filtresinde karşılığı yok
+            case 1: case 2: return 11;
+            case 3: case 4: return 12;
+            case 5: case 6: return 13;
+            case 7: return 0;
+            default: return -999;
         }
     }
 
@@ -192,7 +192,7 @@ public class MainActivity extends Activity {
         if (systemMode == -999) {
             new android.app.AlertDialog.Builder(this)
                 .setTitle("Bu mod sistem genelinde desteklenmiyor")
-                .setMessage("Seçtiğin mod uygulama içi önizlemede çalışabilir. Android'in standart sistem filtresinde bu mod için ayrı bir seçenek bulunmuyor.")
+                .setMessage("Seçtiğin mod Android'in standart sistem filtresinde ayrı olarak bulunmuyor. Uygulama içi önizlemeyi açabilirsin.")
                 .setPositiveButton("Önizlemeyi aç", (d, w) -> showSimulation())
                 .setNegativeButton("Geri", null)
                 .show();
@@ -216,7 +216,7 @@ public class MainActivity extends Activity {
             restoreGlobalSettings();
             new android.app.AlertDialog.Builder(this)
                 .setTitle("Cihaz sistem filtresini kabul etmedi")
-                .setMessage("İzin verilmiş olsa bile TECNO'nun yazılımı bu Android ayarını desteklemiyor olabilir. Şimdilik uygulama içi önizlemeyi açabilirsin.")
+                .setMessage("İzin verilmiş olsa bile telefonun yazılımı bu Android ayarını desteklemiyor olabilir.")
                 .setPositiveButton("Önizlemeyi aç", (d, w) -> showSimulation())
                 .setNegativeButton("Geri", null)
                 .show();
@@ -228,14 +228,14 @@ public class MainActivity extends Activity {
     }
 
     private void showAdbPermissionDialog() {
-        String command = "adb shell pm grant com.ayazyt4146.colorvisionsimulator android.permission.WRITE_SECURE_SETTINGS";
+        String command = "pm grant com.ayazyt4146.colorvisionsimulator android.permission.WRITE_SECURE_SETTINGS";
         new android.app.AlertDialog.Builder(this)
-            .setTitle("Bir defalık sistem izni gerekiyor")
-            .setMessage("Bu izin normal bir açılır pencereden verilemiyor. Redmi Pad SE üzerinden kablosuz hata ayıklama ile şu komutu çalıştıracağız. Şimdilik hiçbir şey değişmedi.")
+            .setTitle("Tek telefonla bir defalık izin")
+            .setMessage("İkinci telefon veya bilgisayar gerekmiyor. Aynı telefonda çalışan yerel bir ADB kabuğu (ör. LADB) kullanabilirsin. Geliştirici seçeneklerinden Kablosuz hata ayıklamayı açıp yerel ADB uygulamasında eşleştirme yap; ardından aşağıdaki komutu o uygulamaya yapıştır. Bu izin Android tarafından normal uygulama penceresiyle verilemez.\n\nNot: Yerel ADB uygulaması ayrıca kurulmalıdır; bu uygulama tek başına izni veremez.")
             .setPositiveButton("Komutu kopyala", (d, w) -> {
                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
-                clipboard.setPrimaryClip(ClipData.newPlainText("ADB komutu", command));
-                Toast.makeText(this, "Komut kopyalandı.", Toast.LENGTH_SHORT).show();
+                clipboard.setPrimaryClip(ClipData.newPlainText("Yerel ADB komutu", command));
+                Toast.makeText(this, "Yerel ADB komutu kopyalandı.", Toast.LENGTH_SHORT).show();
             })
             .setNegativeButton("Sonra", null)
             .show();
@@ -248,7 +248,7 @@ public class MainActivity extends Activity {
         int oldMode = prefs.getInt("old_mode", -1);
         if (checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS")
                 != android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Sistem izni yok; filtre ayarı henüz geri yüklenmedi.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "Sistem izni yok; filtre ayarı geri yüklenemedi.", Toast.LENGTH_LONG).show();
             return;
         }
         Settings.Secure.putInt(getContentResolver(), DALTONIZER_MODE, oldMode);
