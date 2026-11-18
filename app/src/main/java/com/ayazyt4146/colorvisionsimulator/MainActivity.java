@@ -142,6 +142,17 @@ public class MainActivity extends Activity {
             startGlobalSimulation();
         });
 
+        if (getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean("active", false)) {
+            Button restore = button("SİSTEM FİLTRESİNİ KAPAT", Color.rgb(180, 65, 72));
+            LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(60));
+            restoreParams.setMargins(0, dp(8), 0, dp(8));
+            content.addView(restore, restoreParams);
+            restore.setOnClickListener(v -> {
+                restoreGlobalSettings();
+                showMenu();
+            });
+        }
+
         TextView limitation = text("ÖNEMLİ: Bu sürüm uygulama içi simülasyon ekranıdır. Android, normal bir uygulamanın diğer oyunların ve uygulamaların görüntüsünü doğrudan değiştirmesine izin vermez. Sistem geneli renk düzeltme cihazın kendi ayarlarıyla ayrıca yönetilir.", 12, Color.rgb(190, 199, 211), false);
         limitation.setPadding(dp(6), dp(8), dp(6), dp(12));
         content.addView(limitation);
@@ -236,11 +247,14 @@ public class MainActivity extends Activity {
         int oldEnabled = prefs.getInt("old_enabled", 0);
         int oldMode = prefs.getInt("old_mode", -1);
         if (checkSelfPermission("android.permission.WRITE_SECURE_SETTINGS")
-                == android.content.pm.PackageManager.PERMISSION_GRANTED) {
-            Settings.Secure.putInt(getContentResolver(), DALTONIZER_MODE, oldMode);
-            Settings.Secure.putInt(getContentResolver(), DALTONIZER_ENABLED, oldEnabled);
+                != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Sistem izni yok; filtre ayarı henüz geri yüklenmedi.", Toast.LENGTH_LONG).show();
+            return;
         }
+        Settings.Secure.putInt(getContentResolver(), DALTONIZER_MODE, oldMode);
+        Settings.Secure.putInt(getContentResolver(), DALTONIZER_ENABLED, oldEnabled);
         prefs.edit().putBoolean("active", false).apply();
+        Toast.makeText(this, "Önceki ekran ayarları geri yüklendi.", Toast.LENGTH_SHORT).show();
     }
 
     private void showSimulation() {
