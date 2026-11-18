@@ -33,9 +33,13 @@ public class MainActivity extends Activity {
     };
     private int selected = 0;
     private Spinner modeSpinner;
+    private boolean english = false;
+    private final String[] modesEn = {"Normal","Protanopia (red deficiency)","Protanomaly (reduced red sensitivity)","Deuteranopia (green deficiency)","Deuteranomaly (reduced green sensitivity)","Tritanopia (blue deficiency)","Tritanomaly (reduced blue sensitivity)","Achromatopsia (complete color blindness)","Achromatomaly (limited color vision)"};
+    private final String[] descriptionsEn = {"Normal color appearance. System filter is off.","Protanopia: red-sensitive cone cells are absent; red-green distinction may be difficult.","Protanomaly: reduced sensitivity to red.","Deuteranopia: green-sensitive cone cells are absent; red-green distinction may be difficult.","Deuteranomaly: reduced sensitivity to green.","Tritanopia: blue-sensitive cone cells are absent; blue-yellow distinction may be affected.","Tritanomaly: reduced sensitivity to blue.","Achromatopsia: color perception is absent or extremely limited; grayscale is an approximation.","Achromatomaly: color perception is significantly reduced; this is an approximate preview."};
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        english = getSharedPreferences("app_settings", MODE_PRIVATE).getBoolean("english", false);
         showMenu();
     }
 
@@ -83,22 +87,25 @@ public class MainActivity extends Activity {
         LinearLayout content = new LinearLayout(this);
         content.setOrientation(LinearLayout.VERTICAL);
 
-        TextView title = text("RENK KÖRÜ\nSİMÜLATÖRÜ", 30, Color.WHITE, true);
+        Button language = button(english ? "LANGUAGE: ENGLISH · TÜRKÇE" : "DİL: TÜRKÇE · ENGLISH", Color.rgb(75,83,112));
+        content.addView(language, new LinearLayout.LayoutParams(-1, dp(48)));
+        language.setOnClickListener(v -> { english = !english; getSharedPreferences("app_settings", MODE_PRIVATE).edit().putBoolean("english", english).apply(); showMenu(); });
+        TextView title = text(english ? "COLOR VISION\nSIMULATOR" : "RENK GÖRME\nSİMÜLATÖRÜ", 30, Color.WHITE, true);
         title.setGravity(Gravity.CENTER);
         title.setPadding(0, dp(10), 0, dp(12));
         content.addView(title, new LinearLayout.LayoutParams(-1, -2));
 
-        TextView subtitle = text("Bir görünüm seç. BAŞLAT'a basınca sistem filtresini etkinleştirmeyi dener.", 16, Color.LTGRAY, false);
+        TextView subtitle = text(english ? "Choose a mode. START will try to enable the system-wide filter." : "Bir görünüm seç. BAŞLAT'a basınca sistem filtresini etkinleştirmeyi dener.", 16, Color.LTGRAY, false);
         subtitle.setGravity(Gravity.CENTER);
         subtitle.setPadding(dp(8), 0, dp(8), dp(24));
         content.addView(subtitle);
 
-        TextView section = text("SİMÜLASYON TÜRÜ", 17, Color.rgb(116, 210, 170), true);
+        TextView section = text(english ? "SIMULATION MODE" : "SİMÜLASYON TÜRÜ", 17, Color.rgb(116, 210, 170), true);
         section.setPadding(dp(4), dp(8), 0, dp(10));
         content.addView(section);
 
         modeSpinner = new Spinner(this);
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, modes) {
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, english ? modesEn : modes) {
             @Override public View getView(int position, View convertView, android.view.ViewGroup parent) {
                 TextView v = (TextView) super.getView(position, convertView, parent);
                 v.setTextColor(Color.WHITE);
@@ -120,12 +127,12 @@ public class MainActivity extends Activity {
         modeSpinner.setPadding(dp(8), dp(6), dp(8), dp(6));
         content.addView(modeSpinner, new LinearLayout.LayoutParams(-1, dp(64)));
 
-        TextView info = text(modeDescriptions[0], 14, Color.LTGRAY, false);
+        TextView info = text((english ? descriptionsEn : modeDescriptions)[0], 14, Color.LTGRAY, false);
         info.setPadding(dp(8), dp(14), dp(8), dp(20));
         content.addView(info);
         modeSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
             @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
-                info.setText(modeDescriptions[position]);
+                info.setText((english ? descriptionsEn : modeDescriptions)[position]);
             }
             @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
         });
@@ -134,8 +141,8 @@ public class MainActivity extends Activity {
         gameCard.setOrientation(LinearLayout.VERTICAL);
         gameCard.setPadding(dp(16), dp(14), dp(16), dp(14));
         gameCard.setBackground(shape(Color.rgb(35, 48, 68), 16));
-        gameCard.addView(text("OYUN MODU · MINECRAFT", 17, Color.rgb(116, 210, 170), true));
-        TextView gameInfo = text("Filtreyi BAŞLAT ile açtıktan sonra Minecraft'a geçebilirsin. Android cihazın sistem filtresini destekliyorsa renkler oyun içinde de değişir. Bu sürümde yüzen mod menüsü henüz yok; filtreyi buradan seçip açıp kapatabilirsin.", 14, Color.LTGRAY, false);
+        gameCard.addView(text(english ? "GAME MODE · MINECRAFT" : "OYUN MODU · MINECRAFT", 17, Color.rgb(116, 210, 170), true));
+        TextView gameInfo = text(english ? "Enable the filter, then open Minecraft. If Android supports the system daltonizer, the effect can remain active in-game. A floating in-game menu is not included in this build." : "Filtreyi BAŞLAT ile açtıktan sonra Minecraft'a geçebilirsin. Android cihazın sistem filtresini destekliyorsa renkler oyun içinde de değişir. Bu sürümde yüzen mod menüsü henüz yok; filtreyi buradan seçip açıp kapatabilirsin.", 14, Color.LTGRAY, false);
         gameInfo.setPadding(0, dp(7), 0, 0);
         gameCard.addView(gameInfo);
         LinearLayout.LayoutParams gameParams = new LinearLayout.LayoutParams(-1, -2);
@@ -146,9 +153,9 @@ public class MainActivity extends Activity {
         sample.setOrientation(LinearLayout.VERTICAL);
         sample.setPadding(dp(16), dp(16), dp(16), dp(16));
         sample.setBackground(shape(Color.rgb(27, 37, 54), 18));
-        TextView sampleTitle = text("ÖNİZLEME ALANI", 17, Color.WHITE, true);
+        TextView sampleTitle = text(english ? "COLOR PREVIEW" : "ÖNİZLEME ALANI", 17, Color.WHITE, true);
         sample.addView(sampleTitle);
-        TextView sampleDesc = text("Sistem filtresi desteklenirse telefonun diğer uygulamalarında da görünür.", 14, Color.LTGRAY, false);
+        TextView sampleDesc = text(english ? "If supported, the system filter also affects other apps." : "Sistem filtresi desteklenirse telefonun diğer uygulamalarında da görünür.", 14, Color.LTGRAY, false);
         sampleDesc.setPadding(0, dp(6), 0, dp(12));
         sample.addView(sampleDesc);
         LinearLayout swatches = new LinearLayout(this);
@@ -163,7 +170,7 @@ public class MainActivity extends Activity {
         sample.addView(swatches);
         content.addView(sample);
 
-        Button start = button("BAŞLAT  ▶", Color.rgb(25, 150, 103));
+        Button start = button(english ? "START  ▶" : "BAŞLAT  ▶", Color.rgb(25, 150, 103));
         LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, dp(66));
         bp.setMargins(0, dp(22), 0, dp(10));
         content.addView(start, bp);
@@ -173,7 +180,7 @@ public class MainActivity extends Activity {
         });
 
         if (getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean("active", false)) {
-            Button restore = button("SİSTEM FİLTRESİNİ KAPAT", Color.rgb(180, 65, 72));
+            Button restore = button(english ? "TURN OFF SYSTEM FILTER" : "SİSTEM FİLTRESİNİ KAPAT", Color.rgb(180, 65, 72));
             LinearLayout.LayoutParams restoreParams = new LinearLayout.LayoutParams(-1, dp(60));
             restoreParams.setMargins(0, dp(8), 0, dp(8));
             content.addView(restore, restoreParams);
@@ -183,7 +190,7 @@ public class MainActivity extends Activity {
             });
         }
 
-        TextView limitation = text("Sistem genelinde çalışma, Android'in renk düzeltme desteğine ve bir defalık sistem iznine bağlıdır. Her cihazda destek garantisi yoktur.", 12, Color.rgb(190, 199, 211), false);
+        TextView limitation = text(english ? "System-wide operation depends on Android color-correction support and a one-time permission. Device support is not guaranteed." : "Sistem genelinde çalışma, Android'in renk düzeltme desteğine ve bir defalık sistem iznine bağlıdır. Her cihazda destek garantisi yoktur.", 12, Color.rgb(190, 199, 211), false);
         limitation.setPadding(dp(6), dp(8), dp(6), dp(12));
         content.addView(limitation);
 
@@ -294,15 +301,15 @@ public class MainActivity extends Activity {
         page.setPadding(dp(18), dp(20), dp(18), dp(18));
         page.setBackgroundColor(Color.rgb(10, 15, 25));
 
-        TextView heading = text("SİMÜLASYON AKTİF", 24, Color.WHITE, true);
+        TextView heading = text(english ? "SIMULATION ACTIVE" : "SİMÜLASYON AKTİF", 24, Color.WHITE, true);
         heading.setGravity(Gravity.CENTER);
         page.addView(heading);
 
-        TextView selectedMode = text("Seçilen görünüm: " + modes[selected], 16, Color.rgb(116, 210, 170), true);
+        TextView selectedMode = text((english ? "Selected mode: " : "Seçilen görünüm: ") + (english ? modesEn[selected] : modes[selected]), 16, Color.rgb(116, 210, 170), true);
         selectedMode.setGravity(Gravity.CENTER);
         selectedMode.setPadding(0, dp(8), 0, dp(8));
         page.addView(selectedMode);
-        TextView selectedDescription = text(modeDescriptions[selected], 14, Color.LTGRAY, false);
+        TextView selectedDescription = text((english ? descriptionsEn : modeDescriptions)[selected], 14, Color.LTGRAY, false);
         selectedDescription.setGravity(Gravity.CENTER);
         selectedDescription.setPadding(dp(8), 0, dp(8), dp(14));
         page.addView(selectedDescription);
@@ -315,7 +322,7 @@ public class MainActivity extends Activity {
         explanation.setPadding(dp(8), dp(12), dp(8), dp(12));
         page.addView(explanation);
 
-        Button cancel = button("İPTAL  ·  MENÜYE DÖN", Color.rgb(180, 65, 72));
+        Button cancel = button(english ? "CANCEL · BACK TO MENU" : "İPTAL  ·  MENÜYE DÖN", Color.rgb(180, 65, 72));
         page.addView(cancel, new LinearLayout.LayoutParams(-1, dp(64)));
         cancel.setOnClickListener(v -> {
             restoreGlobalSettings();
