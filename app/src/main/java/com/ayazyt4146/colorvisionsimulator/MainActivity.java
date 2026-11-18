@@ -15,9 +15,21 @@ import android.content.ClipboardManager;
 
 public class MainActivity extends Activity {
     private final String[] modes = {
-        "Normal (X)", "Protanopi", "Protanomali", "Deuteranopi",
-        "Deuteranomali", "Tritanopi", "Tritanomali", "Akromatopsi",
-        "Akromatomali", "Yeşil", "Kırmızı", "Mavi", "Daha yeşil", "Daha mavi"
+        "Normal", "Protanopi (kırmızı algısı yok)", "Protanomali (kırmızı algısı zayıf)",
+        "Deuteranopi (yeşil algısı yok)", "Deuteranomali (yeşil algısı zayıf)",
+        "Tritanopi (mavi algısı yok)", "Tritanomali (mavi algısı zayıf)",
+        "Akromatopsi (tam renk körlüğü)", "Akromatomali (renk algısı çok az)"
+    };
+    private final String[] modeDescriptions = {
+        "Normal renk görünümü. Sistem filtresi kapalıdır.",
+        "Protanopi: Kırmızıya duyarlı koni hücreleri çalışmaz. Kırmızı-yeşil tonlarını ayırt etmek zorlaşabilir.",
+        "Protanomali: Kırmızıya duyarlılık azalmıştır. Kırmızı ve yeşil tonları farklı görünebilir.",
+        "Deuteranopi: Yeşile duyarlı koni hücreleri çalışmaz. Kırmızı-yeşil ayrımı zorlaşabilir.",
+        "Deuteranomali: Yeşile duyarlılık azalmıştır. En yaygın renk görme farklılıklarından biridir.",
+        "Tritanopi: Maviye duyarlı koni hücreleri çalışmaz. Mavi-sarı ayrımı etkilenebilir.",
+        "Tritanomali: Maviye duyarlılık azalmıştır. Mavi ve sarı tonları farklı algılanabilir.",
+        "Akromatopsi: Çok ileri durumda renkler algılanmaz veya çok sınırlı algılanır; siyah-beyaz görünüm yaklaşık simülasyondur.",
+        "Akromatomali: Renk algısı belirgin biçimde azalmıştır; bu uygulamadaki görünüm yaklaşık önizlemedir."
     };
     private int selected = 0;
     private Spinner modeSpinner;
@@ -108,9 +120,27 @@ public class MainActivity extends Activity {
         modeSpinner.setPadding(dp(8), dp(6), dp(8), dp(6));
         content.addView(modeSpinner, new LinearLayout.LayoutParams(-1, dp(64)));
 
-        TextView info = text("Protanopi • Protanomali • Deuteranopi • Deuteranomali • Tritanopi • Tritanomali • Akromatopsi ve renk ayarları", 14, Color.LTGRAY, false);
-        info.setPadding(dp(6), dp(14), dp(6), dp(20));
+        TextView info = text(modeDescriptions[0], 14, Color.LTGRAY, false);
+        info.setPadding(dp(8), dp(14), dp(8), dp(20));
         content.addView(info);
+        modeSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                info.setText(modeDescriptions[position]);
+            }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+        });
+
+        LinearLayout gameCard = new LinearLayout(this);
+        gameCard.setOrientation(LinearLayout.VERTICAL);
+        gameCard.setPadding(dp(16), dp(14), dp(16), dp(14));
+        gameCard.setBackground(shape(Color.rgb(35, 48, 68), 16));
+        gameCard.addView(text("OYUN MODU · MINECRAFT", 17, Color.rgb(116, 210, 170), true));
+        TextView gameInfo = text("Filtreyi BAŞLAT ile açtıktan sonra Minecraft'a geçebilirsin. Android cihazın sistem filtresini destekliyorsa renkler oyun içinde de değişir. Bu sürümde yüzen mod menüsü henüz yok; filtreyi buradan seçip açıp kapatabilirsin.", 14, Color.LTGRAY, false);
+        gameInfo.setPadding(0, dp(7), 0, 0);
+        gameCard.addView(gameInfo);
+        LinearLayout.LayoutParams gameParams = new LinearLayout.LayoutParams(-1, -2);
+        gameParams.setMargins(0, 0, 0, dp(12));
+        content.addView(gameCard, gameParams);
 
         LinearLayout sample = new LinearLayout(this);
         sample.setOrientation(LinearLayout.VERTICAL);
@@ -270,8 +300,12 @@ public class MainActivity extends Activity {
 
         TextView selectedMode = text("Seçilen görünüm: " + modes[selected], 16, Color.rgb(116, 210, 170), true);
         selectedMode.setGravity(Gravity.CENTER);
-        selectedMode.setPadding(0, dp(8), 0, dp(18));
+        selectedMode.setPadding(0, dp(8), 0, dp(8));
         page.addView(selectedMode);
+        TextView selectedDescription = text(modeDescriptions[selected], 14, Color.LTGRAY, false);
+        selectedDescription.setGravity(Gravity.CENTER);
+        selectedDescription.setPadding(dp(8), 0, dp(8), dp(14));
+        page.addView(selectedDescription);
 
         SimulationView simulation = new SimulationView();
         page.addView(simulation, new LinearLayout.LayoutParams(-1, 0, 1));
@@ -332,11 +366,7 @@ public class MainActivity extends Activity {
                 case 1: case 2: matrix = new float[]{.567f,.433f,0,0,0, .558f,.442f,0,0,0, 0,.242f,.758f,0,0, 0,0,0,1,0}; break;
                 case 3: case 4: matrix = new float[]{.625f,.375f,0,0,0, .7f,.3f,0,0,0, 0,.3f,.7f,0,0, 0,0,0,1,0}; break;
                 case 5: case 6: matrix = new float[]{.95f,.05f,0,0,0, 0,.433f,.567f,0,0, 0,.475f,.525f,0,0, 0,0,0,1,0}; break;
-                case 9: matrix = new float[]{.8f,.1f,.1f,0,0, .1f,1.1f,.1f,0,0, .1f,.1f,.8f,0,0, 0,0,0,1,0}; break;
-                case 10: matrix = new float[]{1.15f,-.1f,-.05f,0,0, -.05f,.9f,.05f,0,0, -.05f,-.1f,1.15f,0,0, 0,0,0,1,0}; break;
-                case 11: matrix = new float[]{.85f,.05f,.1f,0,0, .05f,.85f,.1f,0,0, .1f,.05f,1.15f,0,0, 0,0,0,1,0}; break;
-                case 12: matrix = new float[]{.9f,.05f,.05f,0,0, .05f,1.2f,.05f,0,0, .05f,.05f,.9f,0,0, 0,0,0,1,0}; break;
-                case 13: matrix = new float[]{.9f,.05f,.05f,0,0, .05f,.9f,.05f,0,0, .05f,.05f,1.2f,0,0, 0,0,0,1,0}; break;
+
                 default: return null;
             }
             return new ColorMatrixColorFilter(matrix);
