@@ -90,7 +90,7 @@ public class MainActivity extends Activity {
     }
 
     private boolean isTabletBuild() {
-        return "tablet".equals(getString(R.string.app_layout));
+        return "tablet".equals(BuildConfig.DEVICE_LAYOUT);
     }
 
     private void showMenu() {
