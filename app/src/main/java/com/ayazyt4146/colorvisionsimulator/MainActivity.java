@@ -89,6 +89,10 @@ public class MainActivity extends Activity {
             .show();
     }
 
+    private boolean isTabletBuild() {
+        return "tablet".equals(getString(R.string.app_layout));
+    }
+
     private void showMenu() {
         if (getResources().getConfiguration().smallestScreenWidthDp >= 600) { showTabletMenu(); return; }
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
