@@ -94,7 +94,7 @@ public class MainActivity extends Activity {
     }
 
     private void showMenu() {
-        if (getResources().getConfiguration().smallestScreenWidthDp >= 600) { showTabletMenu(); return; }
+        if (isTabletBuild()) { showTabletMenu(); return; }
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
