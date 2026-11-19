@@ -77,6 +77,7 @@ public class MainActivity extends Activity {
     }
 
     private void showMenu() {
+        if (getResources().getConfiguration().smallestScreenWidthDp >= 600) { showTabletMenu(); return; }
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
         LinearLayout page = new LinearLayout(this);
         page.setOrientation(LinearLayout.VERTICAL);
@@ -213,6 +214,145 @@ public class MainActivity extends Activity {
         scroll.addView(content);
         page.addView(scroll, new LinearLayout.LayoutParams(-1, 0, 1));
         setContentView(page);
+    }
+
+
+    // Wide-screen tablet layout: two-column control dashboard.
+    private void showTabletMenu() {
+        getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        LinearLayout root = new LinearLayout(this);
+        root.setOrientation(LinearLayout.VERTICAL);
+        root.setPadding(dp(26), dp(20), dp(26), dp(20));
+        root.setBackgroundColor(Color.rgb(13, 19, 31));
+
+        LinearLayout header = new LinearLayout(this);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        TextView brand = text("COLOR VISION SIMULATOR", 26, Color.WHITE, true);
+        header.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
+        Button language = button(english ? "ENGLISH / TÜRKÇE" : "TÜRKÇE / ENGLISH", Color.rgb(75,83,112));
+        header.addView(language, new LinearLayout.LayoutParams(dp(210), dp(52)));
+        language.setOnClickListener(v -> {
+            english = !english;
+            getSharedPreferences("app_settings", MODE_PRIVATE).edit().putBoolean("english", english).apply();
+            showTabletMenu();
+        });
+        root.addView(header);
+
+        TextView subtitle = text(english ? "A wider workspace for color-vision simulations" : "Renk görme simülasyonları için geniş ekran kontrol merkezi", 15, Color.LTGRAY, false);
+        subtitle.setPadding(0, dp(5), 0, dp(18));
+        root.addView(subtitle);
+
+        LinearLayout columns = new LinearLayout(this);
+        columns.setOrientation(LinearLayout.HORIZONTAL);
+        columns.setGravity(Gravity.TOP);
+
+        LinearLayout left = new LinearLayout(this);
+        left.setOrientation(LinearLayout.VERTICAL);
+        left.setPadding(dp(18), dp(18), dp(18), dp(18));
+        left.setBackground(shape(Color.rgb(27, 37, 54), 20));
+        TextView choose = text(english ? "SIMULATION MODE" : "SİMÜLASYON TÜRÜ", 19, Color.rgb(116,210,170), true);
+        left.addView(choose);
+        TextView hint = text(english ? "Select a mode from the list." : "Listeden bir görünüm seç.", 14, Color.LTGRAY, false);
+        hint.setPadding(0, dp(6), 0, dp(14));
+        left.addView(hint);
+
+        modeSpinner = new Spinner(this);
+        ArrayAdapter<String> adapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, english ? modesEn : modes) {
+            @Override public View getView(int position, View convertView, android.view.ViewGroup parent) {
+                TextView v = (TextView) super.getView(position, convertView, parent);
+                v.setTextColor(Color.WHITE); v.setTextSize(17); v.setPadding(dp(12), dp(8), dp(8), dp(8));
+                return v;
+            }
+            @Override public View getDropDownView(int position, View convertView, android.view.ViewGroup parent) {
+                TextView v = (TextView) super.getDropDownView(position, convertView, parent);
+                v.setTextSize(16); v.setPadding(dp(14), dp(14), dp(14), dp(14));
+                return v;
+            }
+        };
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        modeSpinner.setAdapter(adapter);
+        modeSpinner.setSelection(selected);
+        modeSpinner.setBackground(shape(Color.rgb(39,51,70), 14));
+        left.addView(modeSpinner, new LinearLayout.LayoutParams(-1, dp(64)));
+
+        TextView description = text((english ? descriptionsEn : modeDescriptions)[selected], 15, Color.WHITE, false);
+        description.setPadding(dp(4), dp(18), dp(4), dp(10));
+        left.addView(description);
+        modeSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                selected = position;
+                description.setText((english ? descriptionsEn : modeDescriptions)[position]);
+            }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {}
+        });
+
+        LinearLayout right = new LinearLayout(this);
+        right.setOrientation(LinearLayout.VERTICAL);
+        right.setPadding(dp(20), dp(18), dp(20), dp(18));
+        right.setBackground(shape(Color.rgb(27, 37, 54), 20));
+        TextView previewTitle = text(english ? "COLOR PREVIEW" : "RENK ÖNİZLEMESİ", 19, Color.WHITE, true);
+        right.addView(previewTitle);
+        TextView previewText = text(english ? "Compare common colors in the selected simulation." : "Seçilen simülasyonda temel renkleri karşılaştır.", 14, Color.LTGRAY, false);
+        previewText.setPadding(0, dp(6), 0, dp(14));
+        right.addView(previewText);
+        LinearLayout swatches = new LinearLayout(this);
+        swatches.setOrientation(LinearLayout.HORIZONTAL);
+        int[] previewColors = {Color.RED, Color.GREEN, Color.BLUE, Color.YELLOW, Color.CYAN, Color.MAGENTA};
+        for (int c : previewColors) {
+            View chip = new View(this);
+            chip.setBackground(shape(c, 10));
+            LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(0, dp(56), 1);
+            cp.setMargins(dp(3), 0, dp(3), 0);
+            swatches.addView(chip, cp);
+        }
+        right.addView(swatches);
+
+        TextView floatingTitle = text(english ? "FLOATING MENU" : "YÜZEN MOD MENÜSÜ", 18, Color.rgb(116,210,170), true);
+        floatingTitle.setPadding(0, dp(24), 0, dp(7));
+        right.addView(floatingTitle);
+        TextView floatingInfo = text(english ? "Keep quick mode controls above other apps." : "Diğer uygulamaların üzerinde hızlı mod kontrollerini kullan.", 14, Color.LTGRAY, false);
+        floatingInfo.setPadding(0, 0, 0, dp(12));
+        right.addView(floatingInfo);
+        Button overlay = button(english ? "ENABLE FLOATING MENU" : "YÜZEN MENÜYÜ ETKİNLEŞTİR", Color.rgb(74,105,190));
+        right.addView(overlay, new LinearLayout.LayoutParams(-1, dp(58)));
+        overlay.setOnClickListener(v -> {
+            if (!android.provider.Settings.canDrawOverlays(this)) {
+                Intent i = new Intent(android.provider.Settings.ACTION_MANAGE_OVERLAY_PERMISSION, android.net.Uri.parse("package:" + getPackageName()));
+                startActivity(i);
+                Toast.makeText(this, english ? "Allow display over other apps, then return." : "Diğer uygulamaların üzerinde gösterme iznini verip geri dön.", Toast.LENGTH_LONG).show();
+                return;
+            }
+            startService(new Intent(this, FloatingMenuService.class));
+            Toast.makeText(this, english ? "Floating menu enabled." : "Yüzen menü etkinleştirildi.", Toast.LENGTH_SHORT).show();
+        });
+        Button closeOverlay = button(english ? "CLOSE FLOATING MENU" : "YÜZEN MENÜYÜ KAPAT", Color.rgb(92,100,118));
+        LinearLayout.LayoutParams closeParams = new LinearLayout.LayoutParams(-1, dp(52));
+        closeParams.setMargins(0, dp(8), 0, 0);
+        right.addView(closeOverlay, closeParams);
+        closeOverlay.setOnClickListener(v -> stopService(new Intent(this, FloatingMenuService.class)));
+
+        LinearLayout.LayoutParams leftParams = new LinearLayout.LayoutParams(0, -1, 1f);
+        leftParams.setMargins(0, 0, dp(12), 0);
+        columns.addView(left, leftParams);
+        columns.addView(right, new LinearLayout.LayoutParams(0, -1, 1.25f));
+        root.addView(columns, new LinearLayout.LayoutParams(-1, 0, 1f));
+
+        LinearLayout actions = new LinearLayout(this);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setPadding(0, dp(14), 0, 0);
+        Button start = button(english ? "START SIMULATION  ▶" : "SİMÜLASYONU BAŞLAT  ▶", Color.rgb(25,150,103));
+        actions.addView(start, new LinearLayout.LayoutParams(0, dp(64), 1f));
+        start.setOnClickListener(v -> { selected = modeSpinner.getSelectedItemPosition(); startGlobalSimulation(); });
+        if (getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean("active", false)) {
+            Button restore = button(english ? "RESTORE ORIGINAL" : "ORİJİNAL RENKLERE DÖN", Color.rgb(180,65,72));
+            LinearLayout.LayoutParams rp = new LinearLayout.LayoutParams(0, dp(64), 1f);
+            rp.setMargins(dp(12), 0, 0, 0);
+            actions.addView(restore, rp);
+            restore.setOnClickListener(v -> { restoreGlobalSettings(); showTabletMenu(); });
+        }
+        root.addView(actions);
+        setContentView(root);
     }
 
     private static final String DALTONIZER_ENABLED = "accessibility_display_daltonizer_enabled";
