@@ -4,16 +4,19 @@ plugins {
 android {
     namespace = "com.ayazyt4146.colorvisionsimulator"
     compileSdk = 35
-    buildFeatures {\n        buildConfig = true\n    }\n    flavorDimensions += "device"
+    buildFeatures {
+        buildConfig = true
+    }
+    flavorDimensions += "device"
     productFlavors {
         create("phone") {
             dimension = "device"
-            buildConfigField("String", "DEVICE_LAYOUT", "\\"phone\\"")
+            buildConfigField("String", "DEVICE_LAYOUT", "\"phone\"")
         }
         create("tablet") {
             dimension = "device"
             applicationIdSuffix = ".tablet"
-            buildConfigField("String", "DEVICE_LAYOUT", "\\"tablet\\"")
+            buildConfigField("String", "DEVICE_LAYOUT", "\"tablet\"")
         }
     }
     defaultConfig {
