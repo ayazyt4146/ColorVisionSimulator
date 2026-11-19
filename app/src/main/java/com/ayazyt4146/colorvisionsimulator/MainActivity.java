@@ -76,6 +76,19 @@ public class MainActivity extends Activity {
         return b;
     }
 
+
+    private void showHelpDialog() {
+        String title = english ? "EASY GUIDE" : "KOLAY KULLANIM REHBERİ";
+        String message = english
+            ? "1. CHOOSE A MODE\\nTap the simulation list and select the color-vision mode you want to preview. The text below explains it.\\n\\n2. PRESS START\\nTap START. If Android asks for a special permission, follow the on-screen instructions. This permission is a one-time setup on most devices.\\n\\n3. USE THE FLOATING MENU (OPTIONAL)\\nTap ENABLE FLOATING MENU and allow “Display over other apps”. You can then change modes from the small floating panel.\\n\\n4. RETURN TO NORMAL\\nTap CANCEL / RESTORE ORIGINAL to turn off the filter and restore the previous system setting.\\n\\nIMPORTANT\\nSystem-wide filtering depends on Android and device support. Some modes are approximate or preview-only. This app is a simulator, not a medical test."
+            : "1. MOD SEÇ\\nSimülasyon listesinden denemek istediğin renk görme moduna dokun. Altındaki yazı ne anlama geldiğini açıklar.\\n\\n2. BAŞLAT'A BAS\\nBAŞLAT düğmesine dokun. Android özel bir izin isterse ekrandaki adımları izle. Bu izin çoğu cihazda bir kez verilir.\\n\\n3. YÜZEN MENÜ (İSTEĞE BAĞLI)\\nYÜZEN MENÜYÜ ETKİNLEŞTİR'e bas ve “Diğer uygulamaların üzerinde göster” iznini ver. Sonra küçük menüden mod değiştirebilirsin.\\n\\n4. NORMAL GÖRÜNÜME DÖN\\nFiltreyi kapatıp önceki sistem ayarını geri yüklemek için İPTAL / ORİJİNAL RENKLERE DÖN düğmesine bas.\\n\\nÖNEMLİ\\nSistem genelinde filtreleme Android'e ve cihaz desteğine bağlıdır. Bazı modlar yaklaşık simülasyondur veya yalnızca önizlemede çalışır. Bu uygulama tıbbi test değildir.";
+        new android.app.AlertDialog.Builder(this)
+            .setTitle(title)
+            .setMessage(message)
+            .setPositiveButton(english ? "GOT IT" : "ANLADIM", null)
+            .show();
+    }
+
     private void showMenu() {
         if (getResources().getConfiguration().smallestScreenWidthDp >= 600) { showTabletMenu(); return; }
         getWindow().clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -92,6 +105,11 @@ public class MainActivity extends Activity {
         Button language = button(english ? "LANGUAGE: ENGLISH · TÜRKÇE" : "DİL: TÜRKÇE · ENGLISH", Color.rgb(75,83,112));
         content.addView(language, new LinearLayout.LayoutParams(-1, dp(48)));
         language.setOnClickListener(v -> { english = !english; getSharedPreferences("app_settings", MODE_PRIVATE).edit().putBoolean("english", english).apply(); showMenu(); });
+        Button help = button(english ? "HELP / GUIDE  ?" : "YARDIM / NASIL KULLANILIR  ?", Color.rgb(48, 116, 105));
+        LinearLayout.LayoutParams helpParams = new LinearLayout.LayoutParams(-1, dp(48));
+        helpParams.setMargins(0, dp(8), 0, 0);
+        content.addView(help, helpParams);
+        help.setOnClickListener(v -> showHelpDialog());
         TextView title = text(english ? "COLOR VISION\nSIMULATOR" : "RENK GÖRME\nSİMÜLATÖRÜ", 30, Color.WHITE, true);
         title.setGravity(Gravity.CENTER);
         title.setPadding(0, dp(10), 0, dp(12));
